@@ -1,3 +1,4 @@
+from dirty_equals import IsDatetime, IsStr
 from fastapi.testclient import TestClient
 
 
@@ -5,12 +6,17 @@ def test_crud_round_trip(client: TestClient) -> None:
     created = client.post("/api/notes", json={"title": "hello", "body": "world"})
     assert created.status_code == 201, created.text
     note = created.json()
-    assert note["title"] == "hello"
+    assert note == {
+        "id": IsStr,
+        "title": "hello",
+        "body": "world",
+        "created_at": IsDatetime(iso_string=True),
+    }
     note_id = note["id"]
 
     listed = client.get("/api/notes")
     assert listed.status_code == 200
-    assert listed.json()["total"] == 1
+    assert listed.json() == {"notes": [note], "total": 1}
 
     fetched = client.get(f"/api/notes/{note_id}")
     assert fetched.status_code == 200

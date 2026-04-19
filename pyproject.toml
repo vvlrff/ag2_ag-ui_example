@@ -12,6 +12,7 @@ version = "0.1.0"
 description = "Public reference example: FastAPI + Dishka + AG2.beta with AG-UI protocol"
 readme = "README.md"
 license = { file = "LICENSE" }
+authors = [{ name = "Semen Frolov", email = "vvlrff@gmail.com" }]
 requires-python = ">=3.13"
 
 dependencies = [
