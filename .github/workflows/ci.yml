@@ -1,0 +1,50 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_USER: ag2
+          POSTGRES_PASSWORD: ag2
+          POSTGRES_DB: ag2
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U ag2"
+          --health-interval 5s
+          --health-timeout 3s
+          --health-retries 20
+
+    env:
+      AG2EX__DATABASE_URL: postgresql+psycopg://ag2:ag2@localhost:5432/ag2
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v3
+        with:
+          enable-cache: true
+
+      - name: Sync dependencies
+        run: uv sync --locked
+
+      - name: Ruff check
+        run: uv run ruff check src tests
+
+      - name: Ruff format check
+        run: uv run ruff format --check src tests
+
+      - name: Import-linter
+        run: uv run lint-imports
+
+      - name: Pytest (unit + integration)
+        run: uv run pytest

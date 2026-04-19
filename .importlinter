@@ -1,0 +1,36 @@
+[importlinter]
+root_package = ag2_example
+include_external_packages = True
+
+[importlinter:contract:layers]
+name = Clean architecture layers
+type = layers
+layers =
+    ag2_example.main
+    ag2_example.api
+    ag2_example.usecases
+    ag2_example.gateways
+    ag2_example.models
+    ag2_example.domain
+
+[importlinter:contract:no-agent-in-lower-layers]
+name = Agent framework imports stay in api.agent and main.providers.agent
+type = forbidden
+source_modules =
+    ag2_example.domain
+    ag2_example.models
+    ag2_example.gateways
+    ag2_example.usecases
+forbidden_modules =
+    autogen
+
+[importlinter:contract:no-fastapi-in-domain]
+name = FastAPI/Starlette stay out of domain / gateways / usecases
+type = forbidden
+source_modules =
+    ag2_example.domain
+    ag2_example.gateways
+    ag2_example.usecases
+forbidden_modules =
+    fastapi
+    starlette

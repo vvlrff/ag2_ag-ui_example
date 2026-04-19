@@ -1,0 +1,36 @@
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: note_db
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "user", "-d", "note_db"]
+      interval: 5s
+      retries: 20
+    ports:
+      - "5432:5432"
+
+  backend:
+    build: .
+    environment:
+      AG2EX__DATABASE_URL: postgresql+psycopg://user:password@localhost:5432/note_db
+      AG2EX__OPENAI_API_KEY: ${AG2EX__OPENAI_API_KEY:-${OPENAI_API_KEY:-sk-placeholder}}
+      AG2EX__OPENAI_MODEL: ${AG2EX__OPENAI_MODEL:-gpt-4o-mini}
+      AG2EX__OPENAI_PROXY_URL: ${AG2EX__OPENAI_PROXY_URL:-}
+      AG2EX__LOG_LEVEL: ${AG2EX__LOG_LEVEL:-INFO}
+      AG2EX__LOG_JSON: ${AG2EX__LOG_JSON:-false}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+    command: >
+      sh -c "alembic upgrade head &&
+             uvicorn ag2_example.main.entrypoint:app --host 0.0.0.0 --port 8000"
+
+volumes:
+  pgdata: {}

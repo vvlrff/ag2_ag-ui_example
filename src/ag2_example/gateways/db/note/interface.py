@@ -1,0 +1,13 @@
+from typing import Protocol
+
+from ag2_example.domain.entities import Note, NoteId
+
+
+class NoteRepository(Protocol):
+    async def create(self, note: Note) -> Note: ...
+
+    async def get_by_id(self, note_id: NoteId) -> Note | None: ...
+
+    async def list(self, limit: int = 20, offset: int = 0) -> list[Note]: ...
+
+    async def delete(self, note_id: NoteId) -> bool: ...
