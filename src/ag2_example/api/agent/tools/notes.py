@@ -1,9 +1,11 @@
+from dataclasses import dataclass
+from datetime import datetime
 from uuid import UUID
 
 from autogen.beta import Toolkit, tool
 from dishka_ag2 import FromDishka, inject
 
-from ag2_example.domain.entities import NoteId
+from ag2_example.domain.entities import Note, NoteId
 from ag2_example.usecases import (
     CreateNoteRequest,
     CreateNoteUseCase,
@@ -14,19 +16,36 @@ from ag2_example.usecases import (
 )
 
 
+@dataclass(slots=True, frozen=True)
+class NoteToolResult:
+    id: UUID
+    title: str
+    body: str
+    created_at: datetime
+
+    @classmethod
+    def from_entity(cls, note: Note) -> "NoteToolResult":
+        return cls(
+            id=note.id,
+            title=note.title,
+            body=note.body,
+            created_at=note.created_at,
+        )
+
+
 @tool
 @inject
 async def list_notes(
     uc: FromDishka[ListNotesUseCase],
     limit: int = 20,
-) -> list[dict[str, str]]:
+) -> list[NoteToolResult]:
     """List notes stored in the database.
 
     Args:
         limit: maximum number of notes to return (newest first).
     """
     response = await uc.execute(ListNotesRequest(limit=limit))
-    return [{"id": str(n.id), "title": n.title, "body": n.body} for n in response.notes]
+    return [NoteToolResult.from_entity(n) for n in response.notes]
 
 
 @tool
@@ -35,7 +54,7 @@ async def create_note(
     uc: FromDishka[CreateNoteUseCase],
     title: str,
     body: str = "",
-) -> dict[str, str]:
+) -> NoteToolResult:
     """Create a new note in the database.
 
     Args:
@@ -43,8 +62,7 @@ async def create_note(
         body: full text body (optional).
     """
     response = await uc.execute(CreateNoteRequest(title=title, body=body))
-    note = response.note
-    return {"id": str(note.id), "title": note.title, "body": note.body}
+    return NoteToolResult.from_entity(response.note)
 
 
 @tool

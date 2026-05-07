@@ -1,4 +1,6 @@
-from sqlalchemy import delete, select
+from typing import Any, cast
+
+from sqlalchemy import CursorResult, delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from ag2_example.domain.entities import Note, NoteId
@@ -27,5 +29,5 @@ class AlchemyNoteRepository(NoteRepository):
 
     async def delete(self, note_id: NoteId) -> bool:
         stmt = delete(notes_table).where(notes_table.c.id == note_id)
-        result = await self.session.execute(stmt)
+        result = cast(CursorResult[Any], await self.session.execute(stmt))
         return (result.rowcount or 0) > 0
